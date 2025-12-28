@@ -14,7 +14,7 @@ public partial class FastBodyNodeSlot : ResoniteMod
     {
         public User CachedUser { get; set; } = user;
         public BodyNode CachedNode { get; set; } = node;
-        public Slot CachedSlot { get; set; } = user.GetBodyNodeSlot(node);
+        public Slot CachedSlot { get; set; } = CustomGetBodyNodeSlot(user, node);
         public Slot CachedParent { get; set; } = null!;
         public AvatarObjectSlot CachedAvatarObjectSlot { get; set; } = null!;
         public RefID CachedEquippedAvatar { get; set; } = new();

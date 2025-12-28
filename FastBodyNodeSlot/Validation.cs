@@ -100,7 +100,7 @@ public partial class FastBodyNodeSlot : ResoniteMod
         // If at any point a cache invalidation or other update occured, run the usual logic to fetch the body node slot
         if (shouldUpdate == true)
         {
-            slot = user.GetBodyNodeSlot(node);
+            slot = CustomGetBodyNodeSlot(user, node);
             CachedBodyNodeSlots[instance].CachedSlot = slot;
         }
 

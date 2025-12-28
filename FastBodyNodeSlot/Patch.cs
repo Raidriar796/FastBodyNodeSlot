@@ -17,16 +17,19 @@ public partial class FastBodyNodeSlot : ResoniteMod
             // Run original method if the mod is disabled
             if (!Config!.GetValue(enable)) return true;
 
-            // Recreation of the original compute method
+            // Recreation of the original Compute method
             User user;
+
             if (__instance.Source.Source == null)
             {
                 user = context.World.LocalUser;
             }
+
             else
             {
                 user = ProtoFlux.Runtimes.Execution.ExecutionContextExtensions.ReadObject<User>(0, context);
             }
+
             BodyNode node = ProtoFlux.Runtimes.Execution.ExecutionContextExtensions.ReadValue<BodyNode>(1, context);
             // Run custom method instead of GetBodyNodeSlot
             __result = CheckForChanges(__instance, user, node);

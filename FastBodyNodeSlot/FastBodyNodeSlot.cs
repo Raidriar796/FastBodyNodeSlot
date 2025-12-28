@@ -22,5 +22,4 @@ public partial class FastBodyNodeSlot : ResoniteMod
         Config?.Save(true);
         harmony.PatchAll();
     }
-
 }
