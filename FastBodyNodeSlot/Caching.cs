@@ -21,6 +21,8 @@ public partial class FastBodyNodeSlot : ResoniteMod
         public BipedRig CachedBipedRig { get; set; } = new();
 
         public bool IsBipedRigSearched { get; set; } = false;
+
+        public Dictionary<BodyNode, AvatarObjectSlot> SearchedBodyNodes { get; } = [];
     }
 
     // Stores the instance of the BodyNodeSlot with it's cached results

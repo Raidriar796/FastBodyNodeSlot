@@ -11,7 +11,8 @@ public partial class FastBodyNodeSlot : ResoniteMod
     private static Slot CustomGetBodyNodeSlot(BodyNodeSlot instance, User user, BodyNode node)
     {
         CachedResults cachedResults;
-        BipedRig bipedRig = null!;
+        BipedRig bipedRig;
+        AvatarObjectSlot avatarObjectSlot = null!;
 
         // Returns early if the dictionary does not have the BodyNodeSlot tracked yet
         if (CachedBodyNodeSlots.ContainsKey(instance))
@@ -78,11 +79,36 @@ public partial class FastBodyNodeSlot : ResoniteMod
 		        return bone;
 	      }
 
-	      AvatarObjectSlot avatarSlot = root.FindSlotForNodeInChildren(node);
+        // Check if any previously stored AvatarObjectSlot were destroyed
+        // If so, clear the dictionary and start over
+        foreach (BodyNode nodeKey in cachedResults.SearchedBodyNodes.Keys)
+        {
+            if (cachedResults.SearchedBodyNodes[nodeKey] != null)
+            {
+                if (cachedResults.SearchedBodyNodes[nodeKey].IsDestroyed)
+                {
+                    cachedResults.SearchedBodyNodes.Clear();
+                    CachedBodyNodeSlots[instance].SearchedBodyNodes.Clear();
+                    break;
+                }
+            }
+        }
 
-	      if (avatarSlot != null)
+        // Check if the body node being searched has been searched already,
+        // cache it if it hasn't, reuse the cached results if it has.
+        if (!cachedResults.SearchedBodyNodes.ContainsKey(node))
+        {
+            avatarObjectSlot = root.FindSlotForNodeInChildren(node);
+            CachedBodyNodeSlots[instance].SearchedBodyNodes.Add(node, avatarObjectSlot);
+        }
+        else
+        {
+            avatarObjectSlot = cachedResults.SearchedBodyNodes[node];
+        }
+
+	      if (avatarObjectSlot != null)
 	      {
-		        return avatarSlot.Slot;
+		        return avatarObjectSlot.Slot;
 	      }
 
 	      return null!;
