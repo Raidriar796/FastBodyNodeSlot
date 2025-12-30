@@ -5,9 +5,9 @@ using ProtoFlux.Runtimes.Execution.Nodes.FrooxEngine.Avatar;
 using Renderite.Shared;
 using ResoniteModLoader;
 
-namespace FastBodyNodeSlot;
+namespace FluxCaching;
 
-public partial class FastBodyNodeSlot : ResoniteMod
+public partial class FluxCaching : ResoniteMod
 {
     // Instantiated to cache data to compare for changes
     private class CachedResults(BodyNodeSlot instance, User user, BodyNode node)

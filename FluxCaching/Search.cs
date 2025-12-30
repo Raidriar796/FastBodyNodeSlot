@@ -4,9 +4,9 @@ using FrooxEngine.CommonAvatar;
 using ProtoFlux.Runtimes.Execution.Nodes.FrooxEngine.Avatar;
 using Renderite.Shared;
 
-namespace FastBodyNodeSlot;
+namespace FluxCaching;
 
-public partial class FastBodyNodeSlot : ResoniteMod
+public partial class FluxCaching : ResoniteMod
 {
     private static Slot CustomGetBodyNodeSlot(BodyNodeSlot instance, User user, BodyNode node)
     {

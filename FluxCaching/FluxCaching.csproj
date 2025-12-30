@@ -4,8 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FastBodyNodeSlot</RootNamespace>
-    <AssemblyTitle>FastBodyNodeSlot</AssemblyTitle>
+    <RootNamespace>FluxCaching</RootNamespace>
+    <AssemblyTitle>FluxCaching</AssemblyTitle>
     <Authors>Raidriar796</Authors>
     <Copyright>Copyright © 2025 Raidriar796</Copyright>
     <Version>0.2.0</Version>

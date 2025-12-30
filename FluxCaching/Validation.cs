@@ -4,9 +4,9 @@ using ProtoFlux.Runtimes.Execution.Nodes.FrooxEngine.Avatar;
 using Renderite.Shared;
 using ResoniteModLoader;
 
-namespace FastBodyNodeSlot;
+namespace FluxCaching;
 
-public partial class FastBodyNodeSlot : ResoniteMod
+public partial class FluxCaching : ResoniteMod
 {
     // Stores data about the node to compare for changes across updates
     private static Slot CheckForChanges(BodyNodeSlot instance, User user, BodyNode node)
