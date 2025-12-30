@@ -39,15 +39,7 @@ public partial class FluxCaching : ResoniteMod
 
 	    Slot root = slot;
 
-	    if (root == null)
-	    {
-		    return null!;
-	    }
-
-	    if (node == BodyNode.NONE)
-	    {
-		    return null!;
-	    }
+	    if (root == null || node == BodyNode.NONE) return null!;
 
         // Stores for the first time the biped rig is searched to avoid searching again if it's null
         if (!cache.IsBipedRigSearched)
@@ -56,43 +48,29 @@ public partial class FluxCaching : ResoniteMod
             bipedRig = cache.CachedBipedRig;
             CachedBodyNodeSlots[instance].CachedBipedRig = cache.CachedBipedRig;
             CachedBodyNodeSlots[instance].IsBipedRigSearched = true;
+
+            if (cache.CachedBipedRig != null)
+            {
+                CachedBodyNodeSlots[instance].CachedBipedRig.Destroyed += (b) =>
+                {
+                    cache.CachedBipedRig = root.GetComponentInChildren<BipedRig>();
+                    bipedRig = cache.CachedBipedRig;
+                    CachedBodyNodeSlots[instance].CachedBipedRig = cache.CachedBipedRig;
+                };
+            };
         }
         else if (cache.CachedBipedRig == null)
         {
             bipedRig = null!;
-        }
-        else if (cache.CachedBipedRig.IsDestroyed)
-        {
-            cache.CachedBipedRig = root.GetComponentInChildren<BipedRig>();
-            bipedRig = cache.CachedBipedRig;
-            CachedBodyNodeSlots[instance].CachedBipedRig = cache.CachedBipedRig;
         }
         else
         {
             bipedRig = cache.CachedBipedRig;
         }
 
-	      Slot bone = (bipedRig != null) ? bipedRig.TryGetBone(node) : null!;
+	    Slot bone = (bipedRig != null) ? bipedRig.TryGetBone(node) : null!;
 
-	      if (bone != null)
-	      {
-		        return bone;
-	      }
-
-        // Check if any previously stored AvatarObjectSlot were destroyed
-        // If so, clear the dictionary and start over
-        foreach (BodyNode nodeKey in cache.SearchedAvatarObjectSlots.Keys)
-        {
-            if (cache.SearchedAvatarObjectSlots[nodeKey] != null)
-            {
-                if (cache.SearchedAvatarObjectSlots[nodeKey].IsDestroyed)
-                {
-                    cache.SearchedAvatarObjectSlots.Clear();
-                    CachedBodyNodeSlots[instance].SearchedAvatarObjectSlots.Clear();
-                    break;
-                }
-            }
-        }
+	    if (bone != null) return bone;
 
         // Check if the body node being searched has been searched already,
         // cache it if it hasn't, reuse the cached results if it has.
@@ -100,6 +78,11 @@ public partial class FluxCaching : ResoniteMod
         {
             avatarObjectSlot = root.FindSlotForNodeInChildren(node);
             CachedBodyNodeSlots[instance].SearchedAvatarObjectSlots.Add(node, avatarObjectSlot);
+
+            if (avatarObjectSlot != null)
+            {
+                avatarObjectSlot.Destroyed += (a) => { ClearCache(instance); };
+            }
         }
         else
         {
