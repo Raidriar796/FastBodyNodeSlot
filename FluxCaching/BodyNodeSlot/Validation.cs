@@ -30,12 +30,18 @@ public partial class FluxCaching : ResoniteMod
                 slot.Destroyed += (s) => { ClearCache(instance); };
                 slot.ParentChanged += (s) => { ClearCache(instance); };
                 
+                // Get all parents and subscribe newly cached slots if they haven't been already
                 ICollection<Slot> parentCollection = [];
-                slot.GetAllParents(parentCollection, true);
+                slot.GetAllParents(parentCollection, false);
                 foreach (Slot parent in parentCollection)
                 {
-                    parent.Destroyed += (s) => { ClearCache(instance); };
-                    parent.ParentChanged += (s) => { ClearCache(instance); };
+                    if (CachedBodyNodeSlots[instance].SubscribedSlots.Add(parent))
+                    {
+                        parent.Destroyed += (s) => { ClearCache(instance); };
+                        parent.ParentChanged += (s) => { ClearCache(instance); };
+                    }
+
+                    if (parent == user.Root.Slot) break;
                 }
             }
 
