@@ -8,11 +8,41 @@ namespace FluxCaching;
 
 public partial class FluxCaching : ResoniteMod
 {
-    // Stores data about the node to compare for changes across updates
+    // Used to clear the slot cache when it becomes invalid
+    private static void ClearCache(BodyNodeSlot instance)
+    {
+        CachedBodyNodeSlots.Remove(instance);
+    }
+
+    // If at any point a cache invalidation or other update occured, run the usual logic to fetch the body node slot
+    // Additionally, events will be assigned to limit per update validation and to allow events to handle cache invalidation
+    private static Slot GetSlotAndAssignEvents(BodyNodeSlot instance, User user, BodyNode node)
+    {
+        Slot slot = CustomGetBodyNodeSlot(instance, user, node);
+        CachedBodyNodeSlots[instance].CachedSlot = slot;
+        CachedBodyNodeSlots[instance].IsBodyNodeSearched = true;
+
+        if (slot != null)
+        {
+            slot.Destroyed += (s) => { ClearCache(instance); };
+            slot.ParentChanged += (s) => { ClearCache(instance); };
+            
+            ICollection<Slot> parentCollection = [];
+            slot.GetAllParents(parentCollection, true);
+            foreach (Slot parent in parentCollection)
+            {
+                parent.Destroyed += (s) => { ClearCache(instance); };
+                parent.ParentChanged += (s) => { ClearCache(instance); };
+            }
+        }
+
+        return slot!;
+    }
+
+    // Checks cached data for changes that cannot be assigned to events
     private static Slot CheckForChanges(BodyNodeSlot instance, User user, BodyNode node)
     {
-        bool shouldUpdate = false;
-        CachedResults cachedResults;
+        Cache cache;
 
         // Probably overkill null checks to exit early incase any of these are true
         if (user == null || user.IsDestroyed ||
@@ -22,86 +52,50 @@ public partial class FluxCaching : ResoniteMod
             return null!;
         }
 
-        // Creates a new CachedResults instance and adds it to the dictionary with the instance as the key
+        // Creates a new Cache instance and adds it to the dictionary with the instance as the key
         if (!CachedBodyNodeSlots.ContainsKey(instance))
         {
-            cachedResults = new(instance, user, node);
-            CachedBodyNodeSlots.Add(instance, cachedResults);
+            cache = new(instance, user, node);
+            CachedBodyNodeSlots.Add(instance, cache);
         }
         // If the key already exists, simply reuse it
         else
         {
-            cachedResults = CachedBodyNodeSlots[instance];
+            cache = CachedBodyNodeSlots[instance];
         }
 
-        Slot slot = cachedResults.CachedSlot!;
+        Slot slot = cache.CachedSlot!;
 
-        // Clears the cached slot if the slot is null or was destroyed
-        if (cachedResults.CachedSlot != null && cachedResults.CachedSlot.IsDestroyed)
-        {
-            slot = null!;
-            shouldUpdate = true;
-        }
-
-        // if the cached slot is assigned but the cached parent isn't, assign the parent
-        if (cachedResults.CachedSlot != null && cachedResults.CachedParent == null)
-        {
-            CachedBodyNodeSlots[instance].CachedParent = cachedResults.CachedSlot.Parent;
-            shouldUpdate = true;
-        }
-
-        // Clears the cached parent slot if the parent is destroyed
-        if (cachedResults.CachedParent != null && cachedResults.CachedParent.IsDestroyed)
-        {
-            CachedBodyNodeSlots[instance].CachedParent = null!;
-            shouldUpdate = true;
-        }
-
-        // Reassigns the parent if the parent of the cached slot changes
-        if (cachedResults.CachedSlot != null && cachedResults.CachedParent != cachedResults.CachedSlot.Parent)
-        {
-            CachedBodyNodeSlots[instance].CachedParent = cachedResults.CachedSlot.Parent;
-            shouldUpdate = true;
-        }
+        // Caches the slot if it hasn't been searched for
+        // Checking against a bool to not search again if the slot returns null
+        if (!cache.IsBodyNodeSearched) return GetSlotAndAssignEvents(instance, user, node);
         
         // Reassigns the user if the cached user doesn't match
-        if (cachedResults.CachedUser != user)
+        if (cache.CachedUser != user)
         {
             CachedBodyNodeSlots[instance].CachedUser = user;
-            shouldUpdate = true;
+            return GetSlotAndAssignEvents(instance, user, node);
         }
 
         // Reassigns the BodyNode if the cached BodyNode doesn't match
-        if (cachedResults.CachedNode != node)
+        if (cache.CachedNode != node)
         {
             CachedBodyNodeSlots[instance].CachedNode = node;
-            shouldUpdate = true;
+            return GetSlotAndAssignEvents(instance, user, node);
         }
-
+        
         // Assigns the user's avatar object slot if it's not been assigned already
-        if (cachedResults.CachedAvatarObjectSlot == null)
+        if (cache.CachedAvatarObjectSlot == null)
         {
-            CachedBodyNodeSlots[instance].CachedAvatarObjectSlot = user.Root.Slot.GetComponent<AvatarObjectSlot>();
-            shouldUpdate = true;
-        }
-        // Assigns the user's avatar object slot if the previous was destroyed
-        else if (cachedResults.CachedAvatarObjectSlot.IsDestroyed)
-        {
-            CachedBodyNodeSlots[instance].CachedAvatarObjectSlot = user.Root.Slot.GetComponent<AvatarObjectSlot>();
-            shouldUpdate = true;
-        }
-        // Reassigns the cached avatar if the cached avatar doesn't match the equipped avatar root on the user
-        else if (cachedResults.CachedEquippedAvatar != cachedResults.CachedAvatarObjectSlot.Equipped.Value)
-        {
-            CachedBodyNodeSlots[instance].CachedEquippedAvatar = cachedResults.CachedAvatarObjectSlot.Equipped.Value;
-            shouldUpdate = true;
-        }
+            cache.CachedAvatarObjectSlot = user.Root.Slot.GetComponent<AvatarObjectSlot>();
 
-        // If at any point a cache invalidation or other update occured, run the usual logic to fetch the body node slot
-        if (shouldUpdate == true)
-        {
-            slot = CustomGetBodyNodeSlot(instance, user, node);
-            CachedBodyNodeSlots[instance].CachedSlot = slot;
+            if (cache.CachedAvatarObjectSlot != null)
+            {
+                CachedBodyNodeSlots[instance].CachedAvatarObjectSlot = cache.CachedAvatarObjectSlot;
+                CachedBodyNodeSlots[instance].CachedAvatarObjectSlot.Equipped.OnValueChange += (v) => { ClearCache(instance); };
+                CachedBodyNodeSlots[instance].CachedAvatarObjectSlot.Destroyed += (v) => { ClearCache(instance); };
+                return GetSlotAndAssignEvents(instance, user, node);
+            }
         }
 
         return slot!;

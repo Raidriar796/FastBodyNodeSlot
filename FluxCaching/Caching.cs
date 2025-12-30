@@ -10,21 +10,21 @@ namespace FluxCaching;
 public partial class FluxCaching : ResoniteMod
 {
     // Instantiated to cache data to compare for changes
-    private class CachedResults(BodyNodeSlot instance, User user, BodyNode node)
+    private class Cache(BodyNodeSlot instance, User user, BodyNode node)
     {
         public User CachedUser { get; set; } = user;
         public BodyNode CachedNode { get; set; } = node;
         public Slot CachedSlot { get; set; } = CustomGetBodyNodeSlot(instance, user, node);
-        public Slot CachedParent { get; set; } = null!;
         public AvatarObjectSlot CachedAvatarObjectSlot { get; set; } = null!;
         public RefID CachedEquippedAvatar { get; set; } = new();
         public BipedRig CachedBipedRig { get; set; } = new();
 
+        public bool IsBodyNodeSearched { get; set; } = false;
         public bool IsBipedRigSearched { get; set; } = false;
 
-        public Dictionary<BodyNode, AvatarObjectSlot> SearchedBodyNodes { get; } = [];
+        public Dictionary<BodyNode, AvatarObjectSlot> SearchedAvatarObjectSlots { get; } = [];
     }
 
     // Stores the instance of the BodyNodeSlot with it's cached results
-    private static readonly Dictionary<BodyNodeSlot, CachedResults> CachedBodyNodeSlots = [];
+    private static readonly Dictionary<BodyNodeSlot, Cache> CachedBodyNodeSlots = [];
 }
