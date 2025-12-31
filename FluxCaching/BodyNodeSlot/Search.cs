@@ -35,12 +35,12 @@ public partial class FluxCaching : ResoniteMod
             {
                 cache.CachedBipedRig = root.GetComponentInChildren<BipedRig>();
                 bipedRig = cache.CachedBipedRig;
-                CachedBodyNodeSlots[instance].CachedBipedRig = cache.CachedBipedRig;
-                CachedBodyNodeSlots[instance].IsBipedRigSearched = true;
+                cache.CachedBipedRig = cache.CachedBipedRig;
+                cache.IsBipedRigSearched = true;
 
                 // Subscribe a newly cached BipedRig to clear the cache if it is destroyed
-                if (cache.CachedBipedRig != null && CachedBodyNodeSlots[instance].SubscribedBipedRigs.Add(cache.CachedBipedRig))
-                    CachedBodyNodeSlots[instance].CachedBipedRig.Destroyed += (b) => { ClearCache(instance); };
+                if (cache.CachedBipedRig != null && cache.SubscribedBipedRigs.Add(cache.CachedBipedRig))
+                    cache.CachedBipedRig.Destroyed += (b) => { ClearCache(instance); };
             }
             else if (cache.CachedBipedRig == null) bipedRig = null!;
             else bipedRig = cache.CachedBipedRig;
@@ -54,9 +54,9 @@ public partial class FluxCaching : ResoniteMod
             if (!cache.SearchedAvatarObjectSlots.ContainsKey(node))
             {
                 searchedAvatarObjectSlot = root.FindSlotForNodeInChildren(node);
-                CachedBodyNodeSlots[instance].SearchedAvatarObjectSlots.Add(node, searchedAvatarObjectSlot);
+                cache.SearchedAvatarObjectSlots.Add(node, searchedAvatarObjectSlot);
 
-                if (searchedAvatarObjectSlot != null && CachedBodyNodeSlots[instance].SubscribedSearchedAvatarObjectSlots.Add(searchedAvatarObjectSlot))
+                if (searchedAvatarObjectSlot != null && cache.SubscribedSearchedAvatarObjectSlots.Add(searchedAvatarObjectSlot))
                     searchedAvatarObjectSlot.Destroyed += (a) => { ClearCache(instance); };
             }
             else searchedAvatarObjectSlot = cache.SearchedAvatarObjectSlots[node];

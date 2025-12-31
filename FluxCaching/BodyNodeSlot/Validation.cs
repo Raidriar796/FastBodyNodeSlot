@@ -21,24 +21,34 @@ public partial class FluxCaching : ResoniteMod
                    CachedBodyNodeSlots.Remove(bodyNodeSlot);
             }
 
-            CachedBodyNodeSlots[instance].CachedUser = null!;
-            CachedBodyNodeSlots[instance].CachedSlot = null!;
-            CachedBodyNodeSlots[instance].CachedAvatarObjectSlot = null!;
-            CachedBodyNodeSlots[instance].CachedBipedRig = null!;
+            Cache cache;
 
-            CachedBodyNodeSlots[instance].IsBodyNodeSearched = false;
-            CachedBodyNodeSlots[instance].IsBipedRigSearched = false;
+            if (!CachedBodyNodeSlots.ContainsKey(instance)) return;
+            else cache = CachedBodyNodeSlots[instance];
 
-            CachedBodyNodeSlots[instance].SearchedAvatarObjectSlots.Clear();
+            cache.CachedUser = null!;
+            cache.CachedSlot = null!;
+            cache.CachedAvatarObjectSlot = null!;
+            cache.CachedBipedRig = null!;
+
+            cache.IsBodyNodeSearched = false;
+            cache.IsBipedRigSearched = false;
+
+            cache.SearchedAvatarObjectSlots.Clear();
         }
 
         // If at any point a cache invalidation or other update occured, run the usual logic to fetch the body node slot
         // Additionally, events will be assigned to limit per update validation and to allow events to handle cache invalidation
         private static Slot GetSlotAndAssignEvents(BodyNodeSlot instance, User user, BodyNode node)
         {
+            Cache cache;
+
+            if (!CachedBodyNodeSlots.ContainsKey(instance)) return null!;
+            else cache = CachedBodyNodeSlots[instance];
+
             Slot slot = CustomGetBodyNodeSlot(instance, user, node);
-            CachedBodyNodeSlots[instance].CachedSlot = slot;
-            CachedBodyNodeSlots[instance].IsBodyNodeSearched = true;
+            cache.CachedSlot = slot;
+            cache.IsBodyNodeSearched = true;
 
             // Subscribe the found slot and all of it's parents up to the user root if they haven't been already
             if (slot != null)
@@ -47,7 +57,7 @@ public partial class FluxCaching : ResoniteMod
                 slot.GetAllParents(parentCollection, true);
                 foreach (Slot tempSlot in parentCollection)
                 {
-                    if (CachedBodyNodeSlots[instance].SubscribedSlots.Add(tempSlot))
+                    if (cache.SubscribedSlots.Add(tempSlot))
                     {
                         tempSlot.Destroyed += (s) => { ClearCache(instance); };
                         tempSlot.ParentChanged += (s) => { ClearCache(instance); };
@@ -95,14 +105,14 @@ public partial class FluxCaching : ResoniteMod
             // Reassigns the user if the cached user doesn't match
             if (cache.CachedUser != user)
             {
-                CachedBodyNodeSlots[instance].CachedUser = user;
+                cache.CachedUser = user;
                 shouldUpdate = true;
             }
 
             // Reassigns the BodyNode if the cached BodyNode doesn't match
             if (cache.CachedNode != node)
             {
-                CachedBodyNodeSlots[instance].CachedNode = node;
+                cache.CachedNode = node;
                 shouldUpdate = true;
             }
             
@@ -113,13 +123,13 @@ public partial class FluxCaching : ResoniteMod
 
                 if (cache.CachedAvatarObjectSlot != null)
                 {
-                    CachedBodyNodeSlots[instance].CachedAvatarObjectSlot = cache.CachedAvatarObjectSlot;
+                    cache.CachedAvatarObjectSlot = cache.CachedAvatarObjectSlot;
 
                     // Prevents resubscribing previously cached AvatarObjectSlots
-                    if (CachedBodyNodeSlots[instance].SubscribedAvatarObjectSlots.Add(cache.CachedAvatarObjectSlot))
+                    if (cache.SubscribedAvatarObjectSlots.Add(cache.CachedAvatarObjectSlot))
                     {
-                        CachedBodyNodeSlots[instance].CachedAvatarObjectSlot.Equipped.OnValueChange += (v) => { ClearCache(instance); };
-                        CachedBodyNodeSlots[instance].CachedAvatarObjectSlot.Destroyed += (v) => { ClearCache(instance); };
+                        cache.CachedAvatarObjectSlot.Equipped.OnValueChange += (v) => { ClearCache(instance); };
+                        cache.CachedAvatarObjectSlot.Destroyed += (v) => { ClearCache(instance); };
                     }
 
                     shouldUpdate = true;
