@@ -56,6 +56,7 @@ public partial class FluxCaching : ResoniteMod
         private static Slot CheckForChanges(BodyNodeSlot instance, User user, BodyNode node)
         {
             Cache cache;
+            bool shouldUpdate = false;
 
             // Probably overkill null checks to exit early incase any of these are true
             if (user == null || user.IsDestroyed ||
@@ -81,20 +82,20 @@ public partial class FluxCaching : ResoniteMod
 
             // Caches the slot if it hasn't been searched for
             // Checking against a bool to not search again if the slot returns null
-            if (!cache.IsBodyNodeSearched) return GetSlotAndAssignEvents(instance, user, node);
+            if (!cache.IsBodyNodeSearched) shouldUpdate = true;
             
             // Reassigns the user if the cached user doesn't match
             if (cache.CachedUser != user)
             {
                 CachedBodyNodeSlots[instance].CachedUser = user;
-                return GetSlotAndAssignEvents(instance, user, node);
+                shouldUpdate = true;
             }
 
             // Reassigns the BodyNode if the cached BodyNode doesn't match
             if (cache.CachedNode != node)
             {
                 CachedBodyNodeSlots[instance].CachedNode = node;
-                return GetSlotAndAssignEvents(instance, user, node);
+                shouldUpdate = true;
             }
             
             // Assigns the user's avatar object slot if it's not been assigned already
@@ -113,9 +114,11 @@ public partial class FluxCaching : ResoniteMod
                         CachedBodyNodeSlots[instance].CachedAvatarObjectSlot.Destroyed += (v) => { ClearCache(instance); };
                     }
 
-                    return GetSlotAndAssignEvents(instance, user, node);
+                    shouldUpdate = true;
                 }
             }
+
+            if (shouldUpdate) return GetSlotAndAssignEvents(instance, user, node);
 
             return slot!;
         }
