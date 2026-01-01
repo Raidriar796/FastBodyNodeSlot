@@ -2,7 +2,6 @@
 using FrooxEngine.ProtoFlux;
 using HarmonyLib;
 using ProtoFlux.Runtimes.Execution.Nodes.FrooxEngine.Slots;
-using Renderite.Shared;
 using ResoniteModLoader;
 
 namespace FluxCaching;
