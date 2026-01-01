@@ -23,4 +23,8 @@ public partial class FluxCaching : ResoniteMod
     [AutoRegisterConfigKey]
     public static readonly ModConfigurationKey<bool> findChildByTagCaching =
         new("findChildByTagCaching", "FindChildByTag Caching", () => true);
+
+    [AutoRegisterConfigKey]
+    public static readonly ModConfigurationKey<bool> findParentByNameCaching =
+        new("findParentByNameCaching", "FindParentByName Caching", () => true);
 }
