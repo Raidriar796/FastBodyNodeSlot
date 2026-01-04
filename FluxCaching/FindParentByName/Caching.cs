@@ -17,11 +17,15 @@ public partial class FluxCaching : ResoniteMod
             public bool CachedIgnoreCase { get; set; } = ignoreCase;
             public int CachedSearchedDepth { get; set; } = searchDepth;
             public Slot CachedSlot { get; set; } = null!;
+        }
 
+        private class Data(Cache cache)
+        {
+            public Cache cache = cache;
             public HashSet<Slot> SubscribedSlots { get; } = [];
         }
 
         // Stores the instance of the FindParentByName with it's cached results
-        private static readonly Dictionary<FindParentByName, Cache> CachedFindParentByNames = [];
+        private static readonly Dictionary<FindParentByName, Data> CachedFindParentByNames = [];
     }
 }

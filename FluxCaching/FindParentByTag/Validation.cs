@@ -9,10 +9,8 @@ public partial class FluxCaching : ResoniteMod
     public partial class FindParentByTagCaching
     {
         // Used to clear the slot cache when it becomes invalid
-        private static void ClearCache(FindParentByTag instance)
+        private static void ClearCache(FindParentByTag instance, Slot targetSlot, string targetTag, int searchDepth)
         {
-            Cache cache = CachedFindParentByTags[instance];
-
             // SOME form of clearing no longer used entries in the main dictionary,
             // hopefully this is replaced later, there's likely a better way to do this
             foreach (FindParentByTag findChildByName in CachedFindParentByTags.Keys)
@@ -21,9 +19,9 @@ public partial class FluxCaching : ResoniteMod
                    CachedFindParentByTags.Remove(findChildByName);
             }
 
-            cache.CachedTargetSlot = null!;
-            cache.CachedTargetTag = null!;
-            cache.CachedSlot = null!;
+            if (!CachedFindParentByTags.ContainsKey(instance)) return;
+
+            CachedFindParentByTags[instance].cache = new(targetSlot, targetTag, searchDepth);
         }
 
         // If at any point a cache invalidation or other update occured, run the usual logic to fetch the body node slot
@@ -32,7 +30,8 @@ public partial class FluxCaching : ResoniteMod
         {
             if (targetSlot == null) return null!;
 
-            Cache cache = CachedFindParentByTags[instance];
+            Data data = CachedFindParentByTags[instance];
+            Cache cache = data.cache;
             Slot slot = targetSlot.FindParent(s => s.Tag == targetTag, searchDepth);
             cache.CachedSlot = slot;
 
@@ -42,13 +41,13 @@ public partial class FluxCaching : ResoniteMod
             targetSlot.GetAllParents(slotCollection, true);
             foreach (Slot tempSlot in slotCollection)
             {
-                if (cache.SubscribedSlots.Add(tempSlot))
+                if (data.SubscribedSlots.Add(tempSlot))
                 {
-                    tempSlot.ChildAdded += (s, ss) => { ClearCache(instance); };
-                    tempSlot.ChildRemoved += (s, ss) => { ClearCache(instance); };
-                    tempSlot.tag.OnValueChange += (v) => { ClearCache(instance); };
-                    tempSlot.ParentChanged += (s) => { ClearCache(instance); };
-                    tempSlot.Destroyed += (s) => { ClearCache(instance); };
+                    tempSlot.ChildAdded += (s, ss) => { ClearCache(instance, targetSlot, targetTag, searchDepth); };
+                    tempSlot.ChildRemoved += (s, ss) => { ClearCache(instance, targetSlot, targetTag, searchDepth); };
+                    tempSlot.tag.OnValueChange += (v) => { ClearCache(instance, targetSlot, targetTag, searchDepth); };
+                    tempSlot.ParentChanged += (s) => { ClearCache(instance, targetSlot, targetTag, searchDepth); };
+                    tempSlot.Destroyed += (s) => { ClearCache(instance, targetSlot, targetTag, searchDepth); };
                 }
             }
 
@@ -65,13 +64,11 @@ public partial class FluxCaching : ResoniteMod
             if (!CachedFindParentByTags.ContainsKey(instance))
             {
                 cache = new(targetSlot, targetTag, searchDepth);
-                CachedFindParentByTags.Add(instance, cache);
+                Data data = new(cache);
+                CachedFindParentByTags.Add(instance, data);
             }
             // If the key already exists, simply reuse it
-            else
-            {
-                cache = CachedFindParentByTags[instance];
-            }
+            else cache = CachedFindParentByTags[instance].cache;
             
             Slot slot = cache.CachedSlot;
 

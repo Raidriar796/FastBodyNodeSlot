@@ -25,14 +25,23 @@ public partial class FluxCaching : ResoniteMod
             public bool IsBipedRigSearched { get; set; } = false;
 
             public Dictionary<BodyNode, AvatarObjectSlot> SearchedAvatarObjectSlots { get; } = [];
+        }
 
+        private class HashSets()
+        {
             public HashSet<AvatarObjectSlot> SubscribedAvatarObjectSlots { get; } = [];
             public HashSet<Slot> SubscribedSlots { get; } = [];
             public HashSet<BipedRig> SubscribedBipedRigs { get; } = [];
             public HashSet<AvatarObjectSlot> SubscribedSearchedAvatarObjectSlots { get; } = [];
         }
 
+        private class Data(Cache cache, HashSets hashSets)
+        {
+            public Cache cache = cache;
+            public HashSets hashSets = hashSets;
+        }
+
         // Stores the instance of the BodyNodeSlotInChildren with it's cached results
-        private static readonly Dictionary<BodyNodeSlotInChildren, Cache> CachedBodyNodeSlotInChildrens = [];
+        private static readonly Dictionary<BodyNodeSlotInChildren, Data> CachedBodyNodeSlotInChildrens = [];
     }
 }

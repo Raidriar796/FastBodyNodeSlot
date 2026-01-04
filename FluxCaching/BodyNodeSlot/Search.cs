@@ -11,14 +11,15 @@ public partial class FluxCaching : ResoniteMod
     public partial class BodyNodeSlotCaching
     {
         private static Slot CustomGetBodyNodeSlot(BodyNodeSlot instance, User user, BodyNode node)
-        {
-            Cache cache;
+        {            
+            // Returns early if the dictionary does not have the BodyNodeSlot tracked yet
+            if (!CachedBodyNodeSlots.ContainsKey(instance)) return null!;
+
+            Data data = CachedBodyNodeSlots[instance];
+            Cache cache = data.cache;
+            HashSets hashSets = data.hashSets;
             BipedRig bipedRig;
             AvatarObjectSlot searchedAvatarObjectSlot = null!;
-
-            // Returns early if the dictionary does not have the BodyNodeSlot tracked yet
-            if (CachedBodyNodeSlots.ContainsKey(instance)) cache = CachedBodyNodeSlots[instance];
-            else return null!;
 
             // Recreation of the original GetBodyNodeSlot method's null checking
             Slot slot;
@@ -39,8 +40,8 @@ public partial class FluxCaching : ResoniteMod
                 cache.IsBipedRigSearched = true;
 
                 // Subscribe a newly cached BipedRig to clear the cache if it is destroyed
-                if (cache.CachedBipedRig != null && cache.SubscribedBipedRigs.Add(cache.CachedBipedRig))
-                    cache.CachedBipedRig.Destroyed += (b) => { ClearCache(instance); };
+                if (cache.CachedBipedRig != null && hashSets.SubscribedBipedRigs.Add(cache.CachedBipedRig))
+                    cache.CachedBipedRig.Destroyed += (b) => { ClearCache(instance, user!, node); };
             }
             else if (cache.CachedBipedRig == null) bipedRig = null!;
             else bipedRig = cache.CachedBipedRig;
@@ -56,8 +57,8 @@ public partial class FluxCaching : ResoniteMod
                 searchedAvatarObjectSlot = root.FindSlotForNodeInChildren(node);
                 cache.SearchedAvatarObjectSlots.Add(node, searchedAvatarObjectSlot);
 
-                if (searchedAvatarObjectSlot != null && cache.SubscribedSearchedAvatarObjectSlots.Add(searchedAvatarObjectSlot))
-                    searchedAvatarObjectSlot.Destroyed += (a) => { ClearCache(instance); };
+                if (searchedAvatarObjectSlot != null && hashSets.SubscribedSearchedAvatarObjectSlots.Add(searchedAvatarObjectSlot))
+                    searchedAvatarObjectSlot.Destroyed += (a) => { ClearCache(instance, user!, node); };
             }
             else searchedAvatarObjectSlot = cache.SearchedAvatarObjectSlots[node];
 

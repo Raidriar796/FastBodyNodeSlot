@@ -15,11 +15,15 @@ public partial class FluxCaching : ResoniteMod
             public string CachedTargetTag { get; set; } = targetTag;
             public int CachedSearchedDepth { get; set; } = searchDepth;
             public Slot CachedSlot { get; set; } = null!;
+        }
 
+        private class Data(Cache cache)
+        {
+            public Cache cache = cache;
             public HashSet<Slot> SubscribedSlots { get; } = [];
         }
 
         // Stores the instance of the FindChildByTag with it's cached results
-        private static readonly Dictionary<FindChildByTag, Cache> CachedFindChildByTags = [];
+        private static readonly Dictionary<FindChildByTag, Data> CachedFindChildByTags = [];
     }
 }
